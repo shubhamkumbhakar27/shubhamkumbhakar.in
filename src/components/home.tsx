@@ -4,7 +4,7 @@ import Projection from "./projection";
 const Home = () => {
   return (
     <div>
-      <Projection shape="cube" />
+      <Projection shape="donut" />
     </div>
   );
 };
