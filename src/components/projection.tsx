@@ -42,7 +42,7 @@ const Projection = ({ shape }: { shape: string }) => {
 
   return (
     <div
-      className="flex flex-col border border-gray-500 items-center overflow-hidden"
+      className="flex flex-col border border-gray-500 items-center overflow-hidden max-w-3xl m-auto"
       onClick={() => (currentInterval ? clearInterval(currentInterval) : null)}
     >
       {matrix &&
