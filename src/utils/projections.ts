@@ -66,6 +66,8 @@ export function getCubeMatrix(
   angleZ: number,
   matrixSize: number
 ) {
+  angleZ = 0;
+  angleY = 0;
   const size = matrixSize;
   const cubeSize = 15; // Size of the cube
   const center = Math.floor(size / 2);
