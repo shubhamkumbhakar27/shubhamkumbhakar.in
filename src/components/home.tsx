@@ -11,7 +11,7 @@ const HomePage = () => {
             <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-orange-400 to-rose-400 bg-clip-text text-transparent">
               Namaste 🙏
             </h1>
-            <h2 className='text-3xl md:text-4xl font-bold bg-gradient-to-r from-orange-400 to-rose-400 bg-clip-text text-transparent'>I'm <span className="text-orange-400">Shubham</span></h2>
+            <h2 className='text-3xl md:text-4xl font-bold bg-gradient-to-r from-orange-400 to-rose-400 bg-clip-text text-transparent'>I&apos;m <span className="text-orange-400">Shubham</span></h2>
             <p className="text-xl text-gray-300">
               A software engineer who breathes life into code, an artist who captures beauty on canvas, 
               and a proud Indian aiming to create an impact through technology and art.
