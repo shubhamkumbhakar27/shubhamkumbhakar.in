@@ -3,7 +3,6 @@ import Projection from "@/components/projection";
 import React, { useState } from "react";
 
 const Projections = () => {
-  console.log("RERENDER");
   const [currentShape, setCurrentShape] = useState("donut");
 
   const handleChange = (e: any) => {
@@ -13,7 +12,7 @@ const Projections = () => {
   return (
     <>
       <div className="flex justify-end items-center h-20 p-8">
-        <div className="w-64">
+        <div className="w-40">
           <label
             htmlFor="dropdown"
             className="block text-gray-300 text-sm mb-2"
@@ -22,7 +21,7 @@ const Projections = () => {
           </label>
           <select
             id="dropdown"
-            className="w-full px-4 py-2 bg-gray-800 text-gray-300 border border-gray-700 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+            className="w-full px-3 py-2 bg-gray-800 text-gray-300 border border-gray-700 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer text-sm"
             value={currentShape}
             onChange={handleChange}
           >
