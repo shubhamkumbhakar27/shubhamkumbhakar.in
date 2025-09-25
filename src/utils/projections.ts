@@ -66,145 +66,143 @@ export function getCubeMatrix(
   angleZ: number,
   matrixSize: number
 ) {
-  angleZ = 0;
-  angleY = 0;
-  const size = matrixSize;
-  const cubeSize = 15; // Size of the cube
-  const center = Math.floor(size / 2);
-
   const matrix = [...Array(matrixSize)].map(() =>
     [...Array(matrixSize)].map(() => " ")
   );
 
+  const center = matrixSize / 2;
+  const cubeSize = Math.min(matrixSize / 4, 15);
+
+  // 8 vertices of a cube
   const vertices = [
     [-1, -1, -1],
     [1, -1, -1],
     [1, 1, -1],
-    [-1, 1, -1],
+    [-1, 1, -1], // back face
     [-1, -1, 1],
     [1, -1, 1],
     [1, 1, 1],
-    [-1, 1, 1],
-  ].map((v: any) => v.map((coord: number) => (coord * cubeSize) / 2));
-
-  const faces = [
-    [[0, 1, 2, 3], "@"], // front
-    [[4, 5, 6, 7], "."], // back
-    [[0, 4, 7, 3], "("], // left
-    [[1, 5, 6, 2], ")"], // right
-    [[0, 1, 5, 4], "_"], // top
-    [[3, 2, 6, 7], "_"], // bottom
+    [-1, 1, 1], // front face
   ];
 
-  // Perspective projection parameters
-  const focalLength = 10;
-  const distance = 15;
+  // 12 edges of the cube (connecting vertices)
+  const edges = [
+    [0, 1],
+    [1, 2],
+    [2, 3],
+    [3, 0], // back face edges
+    [4, 5],
+    [5, 6],
+    [6, 7],
+    [7, 4], // front face edges
+    [0, 4],
+    [1, 5],
+    [2, 6],
+    [3, 7], // connecting edges
+  ];
 
-  // Rotation matrices
-  const cosX = Math.cos(angleX),
-    sinX = Math.sin(angleX);
-  const cosY = Math.cos(angleY),
-    sinY = Math.sin(angleY);
-  const cosZ = Math.cos(angleZ),
-    sinZ = Math.sin(angleZ);
-
-  function rotatePoint(x: number, y: number, z: number) {
-    const x1 = x * (cosY * cosZ + sinX * sinY * sinZ) - y * cosX * sinZ;
-    const y1 = x * (cosY * sinZ - sinX * sinY * cosZ) + y * cosX * cosZ;
-    const z1 = focalLength + x * (cosX * sinY) + y * sinX;
-
-    return [x1, y1, z1];
-  }
-
-  // Rotation functions for each axis
-  function rotateX(point: number[]) {
-    const [x, y, z] = point;
+  // Rotation functions
+  function rotateX(point: number[], angle: number): number[] {
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
     return [
-      x,
-      y * Math.cos(angleX) - z * Math.sin(angleX),
-      y * Math.sin(angleX) + z * Math.cos(angleX),
+      point[0],
+      point[1] * cos - point[2] * sin,
+      point[1] * sin + point[2] * cos,
     ];
   }
 
-  function rotateY(point: number[]) {
-    const [x, y, z] = point;
+  function rotateY(point: number[], angle: number): number[] {
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
     return [
-      x * Math.cos(angleY) + z * Math.sin(angleY),
-      y,
-      -x * Math.sin(angleY) + z * Math.cos(angleY),
+      point[0] * cos + point[2] * sin,
+      point[1],
+      -point[0] * sin + point[2] * cos,
     ];
   }
 
-  function rotateZ(point: number[]) {
-    const [x, y, z] = point;
+  function rotateZ(point: number[], angle: number): number[] {
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
     return [
-      x * Math.cos(angleZ) - y * Math.sin(angleZ),
-      x * Math.sin(angleZ) + y * Math.cos(angleZ),
-      z,
+      point[0] * cos - point[1] * sin,
+      point[0] * sin + point[1] * cos,
+      point[2],
     ];
   }
 
-  // Combine all rotations (order: Y -> X -> Z)
-  function rotate(point: number[]) {
-    return rotateZ(rotateX(rotateY(point)));
-  }
+  // Apply rotations and project to 2D
+  const projectedVertices = vertices.map((vertex) => {
+    // Scale the vertex
+    let point = vertex.map((coord) => coord * cubeSize);
 
-  // Project 3D point to 2D
-  function projectPoint(x: number, y: number, z: number) {
-    const scale = focalLength / (z + distance);
-    return [Math.round(x * scale + center), Math.round(y * scale + center)];
-  }
+    // Apply rotations
+    point = rotateX(point, angleX);
+    point = rotateY(point, angleY);
+    point = rotateZ(point, angleZ);
 
-  // Fill polygon in matrix
-  function fillPolygon(points2D: number[][], faceNum: string) {
-    // Simple implementation using bounding box
-    const xs = points2D.map((p) => p[0]);
-    const ys = points2D.map((p) => p[1]);
-    const minX = Math.min(...xs);
-    const maxX = Math.max(...xs);
-    const minY = Math.min(...ys);
-    const maxY = Math.max(...ys);
+    // Simple orthographic projection (no perspective)
+    const x = Math.round(point[0] + center);
+    const y = Math.round(point[1] + center);
+    const z = point[2];
 
-    // Check if point is inside polygon
-    function isInside(x: number, y: number, points: number[][]) {
-      let inside = false;
-      for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
-        const xi = points[i][0],
-          yi = points[i][1];
-        const xj = points[j][0],
-          yj = points[j][1];
+    return { x, y, z };
+  });
 
-        const intersect =
-          yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
-        if (intersect) inside = !inside;
+  // Draw edges
+  function drawLine(
+    x0: number,
+    y0: number,
+    x1: number,
+    y1: number,
+    char: string
+  ) {
+    const dx = Math.abs(x1 - x0);
+    const dy = Math.abs(y1 - y0);
+    const sx = x0 < x1 ? 1 : -1;
+    const sy = y0 < y1 ? 1 : -1;
+    let err = dx - dy;
+
+    let x = x0;
+    let y = y0;
+
+    while (true) {
+      if (x >= 0 && x < matrixSize && y >= 0 && y < matrixSize) {
+        matrix[y][x] = char;
       }
-      return inside;
-    }
 
-    // Fill the polygon
-    for (let y = minY; y <= maxY; y++) {
-      for (let x = minX; x <= maxX; x++) {
-        if (x >= 0 && x < size && y >= 0 && y < size) {
-          if (isInside(x, y, points2D)) {
-            matrix[y][x] = faceNum;
-          }
-        }
+      if (x === x1 && y === y1) break;
+
+      const e2 = 2 * err;
+      if (e2 > -dy) {
+        err -= dy;
+        x += sx;
+      }
+      if (e2 < dx) {
+        err += dx;
+        y += sy;
       }
     }
   }
 
-  // Project and draw each face
-  for (const [vertexIndices, faceNum] of faces) {
-    // First rotate the points, then project them
-    // @ts-ignore
-    const points3D = vertexIndices.map((i) => vertices[i]).map(rotate);
-    const points2D = points3D.map(([x, y, z]: number[]) =>
-      projectPoint(x, y, z)
-    );
-    // @ts-ignore
-    fillPolygon(points2D, faceNum);
-  }
+  // Sort edges by average Z depth (for simple depth sorting)
+  const edgesWithDepth = edges.map(([i, j]) => {
+    const v1 = projectedVertices[i];
+    const v2 = projectedVertices[j];
+    const avgZ = (v1.z + v2.z) / 2;
+    return { edge: [i, j], avgZ, v1, v2 };
+  });
 
-  // console.log(matrix);
+  // Sort by depth (draw back edges first)
+  edgesWithDepth.sort((a, b) => a.avgZ - b.avgZ);
+
+  // Draw all edges
+  edgesWithDepth.forEach(({ v1, v2 }) => {
+    // Use different characters based on depth for visual effect
+    const char = v1.z + v2.z > 0 ? "#" : ".";
+    drawLine(v1.x, v1.y, v2.x, v2.y, char);
+  });
+
   return matrix;
 }
